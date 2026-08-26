@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Lissa 1K Folder — Lissa Entreprise</title>
+
+    <meta
+        name="description"
+        content="Lissa 1K Folder — Mete statuw devan tout Moun."
+    >
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <a href="index.html" class="brand">
+        <div class="brand-mark">LE</div>
+
+        <div class="brand-text">
+            <strong>LISSA</strong>
+            <span>ENTREPRISE</span>
+        </div>
+    </a>
+
+    <nav>
+        <a href="#inscription">Enskri</a>
+        <a href="#membres">Membres</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="eyebrow">
+            LISSA 1K FOLDER
+        </div>
+
+        <h1>
+            Mete statuw
+            <span>devan tout Moun.</span>
+        </h1>
+
+        <p class="hero-description">
+            Rejwenn kominote Lissa 1K Folder la.
+            Enskri enfòmasyon ou epi fè non ou antre
+            nan kominote a.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="#inscription" class="primary-button">
+                Enskri kounye a
+            </a>
+
+            <a href="#membres" class="secondary-button">
+                Gade kominote a
+            </a>
+
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <strong id="memberCount">0</strong>
+                <span>Moun apwouve</span>
+            </div>
+
+            <div class="stat">
+                <strong>1K</strong>
+                <span>Objektif</span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="hero-card">
+
+        <div class="card-label">
+            LISSA ENTREPRISE
+        </div>
+
+        <div class="card-logo">
+            LE
+        </div>
+
+        <div class="card-name">
+            1K
+        </div>
+
+        <div class="card-description">
+            LISSA 1K FOLDER
+        </div>
+
+        <div class="card-footer">
+            <span>LISSA</span>
+            <span>2026</span>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section id="inscription" class="section">
+
+    <div class="section-heading">
+
+        <div class="eyebrow">
+            INSCRIPTION
+        </div>
+
+        <h2>
+            Rejwenn nou
+        </h2>
+
+        <p>
+            Ranpli fòm lan pou voye demann ou.
+        </p>
+
+    </div>
+
+
+    <div class="form-card">
+
+        <div class="form-card-header">
+
+            <div>
+                <span>LISSA 1K</span>
+
+                <h3>
+                    Enskri enfòmasyon ou
+                </h3>
+            </div>
+
+            <div class="mini-logo">
+                LE
+            </div>
+
+        </div>
+
+
+        <form id="registrationForm">
+
+            <div class="field">
+
+                <label for="name">
+                    Nom complet
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Exemple : Jean Baptiste"
+                    autocomplete="name"
+                    required
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="country">
+                    Pays
+                </label>
+
+                <select
+                    id="country"
+                    name="country"
+                    required
+                >
+
+                    <option value="">
+                        Chwazi peyi ou
+                    </option>
+
+                    <option value="Haïti">
+                        Haïti (+509)
+                    </option>
+
+                    <option value="République dominicaine">
+                        République dominicaine (+1)
+                    </option>
+
+                    <option value="États-Unis">
+                        États-Unis (+1)
+                    </option>
+
+                    <option value="Canada">
+                        Canada (+1)
+                    </option>
+
+                    <option value="France">
+                        France (+33)
+                    </option>
+
+                    <option value="Belgique">
+                        Belgique (+32)
+                    </option>
+
+                    <option value="Suisse">
+                        Suisse (+41)
+                    </option>
+
+                    <option value="Autre">
+                        Autre
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="phone">
+                    Numéro WhatsApp
+                </label>
+
+                <div class="phone-input">
+
+                    <span id="countryCode">+509</span>
+
+                    <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        placeholder="Exemple : 35001234"
+                        autocomplete="tel"
+                        required
+                    >
+
+                </div>
+
+                <small>
+                    Entre ton numéro sans l'indicatif du pays.
+                </small>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="email">
+                    Email
+                    <span>(facultatif)</span>
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="exemple@email.com"
+                    autocomplete="email"
+                >
+
+            </div>
+
+
+            <div
+                id="formMessage"
+                class="form-message"
+            ></div>
+
+
+            <button
+                type="submit"
+                id="submitBtn"
+                class="submit-button"
+            >
+                Envoyer ma demande
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<section id="membres" class="section">
+
+    <div class="section-heading">
+
+        <div class="eyebrow">
+            COMMUNAUTÉ
+        </div>
+
+        <h2>
+            Membres approuvés
+        </h2>
+
+        <p>
+            Men manm ki deja antre nan kominote a.
+        </p>
+
+    </div>
+
+
+    <div class="members-card">
+
+        <div id="membersList">
+            <div class="loading">
+                Ap chaje...
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<a
+    href="https://chat.whatsapp.com/DlNgdQAHcVw1m7NuTIxytI?s=cl&p=a&ilr=1"
+    class="whatsapp-button"
+    target="_blank"
+    rel="noopener noreferrer"
+>
+    WhatsApp
+</a>
+
+
+<footer>
+
+    <strong>LISSA ENTREPRISE</strong>
+
+    <p>
+        Lissa 1K Folder — Mete statuw devan tout Moun.
+    </p>
+
+    <small>
+        © 2026 Lissa Entreprise
+    </small>
+
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase-client.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+          </html>

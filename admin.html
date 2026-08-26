@@ -1,37 +1,123 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Administration — Lissa 1K Folder</title>
+    <title>Admin — Lissa 1K Folder</title>
 
     <link rel="stylesheet" href="admin.css">
 </head>
 
 <body>
 
-    <!-- HEADER -->
+<header class="admin-navbar">
 
-    <header class="admin-header">
+    <a href="index.html" class="logo">
+        <span class="logo-mark">LE</span>
 
-        <a href="index.html" class="brand">
+        <span>
+            <strong>LISSA</strong>
+            <small>ENTREPRISE</small>
+        </span>
+    </a>
 
-            <div class="brand-logo">
-                LE
+    <a href="index.html" class="back-link">
+        Retour au site
+    </a>
+
+</header>
+
+
+<main class="admin-container">
+
+    <!-- CONNEXION -->
+
+    <section id="loginSection" class="login-card">
+
+        <div class="admin-icon">
+            LE
+        </div>
+
+        <span class="eyebrow">
+            LISSA ENTREPRISE
+        </span>
+
+        <h1>
+            Espace Admin
+        </h1>
+
+        <p>
+            Connectez-vous pour gérer les inscriptions.
+        </p>
+
+
+        <form id="loginForm">
+
+            <label for="email">
+                E-mail
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Votre e-mail"
+                required
+            >
+
+
+            <label for="password">
+                Mot de passe
+            </label>
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Votre mot de passe"
+                required
+            >
+
+
+            <button
+                type="submit"
+                id="loginBtn"
+            >
+                Se connecter
+            </button>
+
+        </form>
+
+
+        <p id="loginMessage"></p>
+
+    </section>
+
+
+    <!-- TABLEAU DE BORD -->
+
+    <section
+        id="adminPanel"
+        class="admin-panel hidden"
+    >
+
+        <div class="panel-header">
+
+            <div>
+
+                <span class="eyebrow">
+                    ADMINISTRATION
+                </span>
+
+                <h1>
+                    Gestion des demandes
+                </h1>
+
+                <p>
+                    Consultez et gérez les inscriptions.
+                </p>
+
             </div>
 
-            <div class="brand-text">
-                <strong>LISSA</strong>
-                <span>ENTREPRISE</span>
-            </div>
-
-        </a>
-
-        <div class="header-right">
-
-            <span id="adminEmail"></span>
 
             <button id="logoutBtn" class="logout-btn">
                 Déconnexion
@@ -39,276 +125,148 @@
 
         </div>
 
-    </header>
 
+        <!-- STATISTIQUES -->
 
-    <!-- CONTENU -->
+        <div class="stats">
 
-    <main class="container">
+            <div class="stat-card">
 
+                <span>Total</span>
 
-        <!-- ================= LOGIN ================= -->
-
-        <section id="loginSection" class="login-section">
-
-            <div class="login-card">
-
-                <div class="login-logo">
-                    LE
-                </div>
-
-                <div class="eyebrow">
-                    LISSA ENTREPRISE
-                </div>
-
-                <h1>
-                    Espace Admin
-                </h1>
-
-                <p>
-                    Connecte-toi pour gérer les inscriptions
-                    de Lissa 1K Folder.
-                </p>
-
-
-                <form id="loginForm">
-
-                    <div class="field">
-
-                        <label for="loginEmail">
-                            E-mail
-                        </label>
-
-                        <input
-                            type="email"
-                            id="loginEmail"
-                            placeholder="admin@email.com"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="field">
-
-                        <label for="loginPassword">
-                            Mot de passe
-                        </label>
-
-                        <input
-                            type="password"
-                            id="loginPassword"
-                            placeholder="Mot de passe"
-                            required
-                        >
-
-                    </div>
-
-
-                    <button
-                        type="submit"
-                        class="primary-btn login-btn"
-                    >
-                        Se connecter
-                    </button>
-
-                </form>
-
-
-                <p id="loginMessage" class="message"></p>
+                <strong id="totalCount">
+                    0
+                </strong>
 
             </div>
 
-        </section>
+
+            <div class="stat-card">
+
+                <span>En attente</span>
+
+                <strong id="pendingCount">
+                    0
+                </strong>
+
+            </div>
 
 
+            <div class="stat-card">
 
-        <!-- ================= DASHBOARD ================= -->
+                <span>Approuvés</span>
 
-        <section
-            id="dashboardSection"
-            class="dashboard hidden"
-        >
+                <strong id="approvedCount">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
 
 
-            <!-- TITRE -->
+        <!-- VCF -->
 
-            <div class="dashboard-heading">
+        <div class="vcf-card">
+
+            <div>
+
+                <span class="eyebrow">
+                    EXPORT
+                </span>
+
+                <h2>
+                    Contacts Lissa
+                </h2>
+
+                <p>
+                    Téléchargez tous les membres approuvés
+                    dans un seul fichier.
+                </p>
+
+            </div>
+
+
+            <button
+                id="downloadVcfBtn"
+                class="vcf-btn"
+            >
+                Télécharger Lissa.vcf
+            </button>
+
+        </div>
+
+
+        <p id="vcfMessage"></p>
+
+
+        <!-- DEMANDES -->
+
+        <div class="requests-card">
+
+            <div class="requests-header">
 
                 <div>
 
                     <span class="eyebrow">
-                        ADMINISTRATION
+                        INSCRIPTIONS
                     </span>
 
-                    <h1>
-                        Gestion des membres
-                    </h1>
-
-                    <p>
-                        Gère les demandes et exporte les membres approuvés.
-                    </p>
+                    <h2>
+                        Demandes reçues
+                    </h2>
 
                 </div>
 
 
-                <div class="dashboard-buttons">
-
-                    <button
-                        id="refreshBtn"
-                        class="secondary-btn"
-                    >
-                        Actualiser
-                    </button>
-
-
-                    <button
-                        id="downloadVcfBtn"
-                        class="primary-btn"
-                    >
-                        Télécharger Lissa.vcf
-                    </button>
-
-                </div>
+                <button
+                    id="refreshBtn"
+                    class="refresh-btn"
+                >
+                    Actualiser
+                </button>
 
             </div>
 
 
+            <div id="membersList">
 
-            <!-- MESSAGE VCF -->
-
-            <p id="vcfMessage" class="message"></p>
-
-
-
-            <!-- ================= STATISTIQUES ================= -->
-
-            <div class="stats-grid">
-
-
-                <div class="stat-card">
-
-                    <span>
-                        Total
-                    </span>
-
-                    <strong id="totalCount">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="stat-card pending">
-
-                    <span>
-                        En attente
-                    </span>
-
-                    <strong id="pendingCount">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="stat-card approved">
-
-                    <span>
-                        Approuvés
-                    </span>
-
-                    <strong id="approvedCount">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="stat-card rejected">
-
-                    <span>
-                        Refusés
-                    </span>
-
-                    <strong id="rejectedCount">
-                        0
-                    </strong>
-
+                <div class="loading">
+                    Chargement...
                 </div>
 
             </div>
 
+        </div>
 
 
-            <!-- ================= LISTE ================= -->
+        <p id="adminMessage"></p>
 
-            <section class="members-card">
+    </section>
 
-                <div class="card-header">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            INSCRIPTIONS
-                        </span>
-
-                        <h2>
-                            Demandes reçues
-                        </h2>
-
-                    </div>
-
-                </div>
+</main>
 
 
-                <div id="membersList">
+<footer>
 
-                    <div class="loading">
-                        Chargement...
-                    </div>
+    <strong>
+        LISSA ENTREPRISE
+    </strong>
 
-                </div>
+    <span>
+        Lissa 1K Folder — 2026
+    </span>
 
-            </section>
-
-
-            <p
-                id="dashboardMessage"
-                class="message"
-            ></p>
+</footer>
 
 
-        </section>
+<!-- SUPABASE -->
 
-    </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="supabase-client.js"></script>
 
-
-    <!-- FOOTER -->
-
-    <footer>
-
-        <strong>
-            LISSA ENTREPRISE
-        </strong>
-
-        <span>
-            Lissa 1K Folder — Administration
-        </span>
-
-    </footer>
-
-
-
-    <!-- SUPABASE -->
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script src="supabase-client.js"></script>
-
-    <script src="admin.js"></script>
+<script src="admin.js"></script>
 
 </body>
-
 </html>

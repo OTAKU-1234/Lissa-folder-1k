@@ -1,337 +1,1032 @@
-const db = window.supabaseClient;
+// =====================================================
+// LISSA 1K FOLDER
+// ADMIN.JS
+// =====================================================
+
+
+// =====================================================
+// ELEMENTS
+// =====================================================
+
+const loginSection =
+    document.getElementById("loginSection");
+
+const dashboardSection =
+    document.getElementById("dashboardSection");
+
 
 const loginForm =
     document.getElementById("loginForm");
 
-const loginCard =
-    document.getElementById("loginCard");
+const loginEmail =
+    document.getElementById("loginEmail");
 
-const adminPanel =
-    document.getElementById("adminPanel");
+const loginPassword =
+    document.getElementById("loginPassword");
+
 
 const loginMessage =
     document.getElementById("loginMessage");
 
-const adminMessage =
-    document.getElementById("adminMessage");
 
-const registrationsList =
-    document.getElementById("registrationsList");
+const dashboardMessage =
+    document.getElementById("dashboardMessage");
+
+
+const adminEmail =
+    document.getElementById("adminEmail");
+
 
 const logoutBtn =
     document.getElementById("logoutBtn");
 
 
-function showLoginMessage(text, success = false) {
+const refreshBtn =
+    document.getElementById("refreshBtn");
 
-    loginMessage.textContent = text;
 
-    loginMessage.style.color =
-        success
-            ? "#69e89a"
-            : "#ff6b6b";
+const downloadVcfBtn =
+    document.getElementById("downloadVcfBtn");
+
+
+const vcfMessage =
+    document.getElementById("vcfMessage");
+
+
+const membersList =
+    document.getElementById("membersList");
+
+
+const totalCount =
+    document.getElementById("totalCount");
+
+
+const pendingCount =
+    document.getElementById("pendingCount");
+
+
+const approvedCount =
+    document.getElementById("approvedCount");
+
+
+const rejectedCount =
+    document.getElementById("rejectedCount");
+
+
+// =====================================================
+// AFFICHER LOGIN
+// =====================================================
+
+function showLogin() {
+
+    loginSection.classList.remove("hidden");
+
+    dashboardSection.classList.add("hidden");
+
+    adminEmail.textContent = "";
+
 }
 
 
+// =====================================================
+// AFFICHER DASHBOARD
+// =====================================================
+
+function showDashboard(session) {
+
+    loginSection.classList.add("hidden");
+
+    dashboardSection.classList.remove("hidden");
+
+    if (session && session.user) {
+
+        adminEmail.textContent =
+            session.user.email || "";
+
+    }
+
+}
+
+
+// =====================================================
+// VÉRIFIER LA SESSION
+// =====================================================
+
+async function checkSession() {
+
+    const {
+        data,
+        error
+    } = await supabaseClient.auth.getSession();
+
+
+    if (error) {
+
+        console.error(error);
+
+        showLogin();
+
+        return;
+
+    }
+
+
+    if (data.session) {
+
+        showDashboard(data.session);
+
+        await loadMembers();
+
+    } else {
+
+        showLogin();
+
+    }
+
+}
+
+
+// =====================================================
+// CONNEXION
+// =====================================================
+
 loginForm.addEventListener(
     "submit",
-    async function (event) {
+    async function(event) {
 
         event.preventDefault();
 
 
         const email =
-            document
-                .getElementById("adminEmail")
-                .value
-                .trim();
+            loginEmail.value.trim();
+
 
         const password =
-            document
-                .getElementById("adminPassword")
-                .value;
+            loginPassword.value;
 
 
-        showLoginMessage(
-            "Connexion..."
-        );
+        loginMessage.textContent =
+            "Connexion en cours...";
+
+        loginMessage.className =
+            "message";
 
 
-        const { error } =
-            await db.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.auth
+                .signInWithPassword({
+
+                    email: email,
+
+                    password: password
+
+                });
 
 
         if (error) {
 
             console.error(error);
 
-            showLoginMessage(
-                "Email ou mot de passe incorrect."
-            );
+            loginMessage.textContent =
+                "E-mail ou mot de passe incorrect.";
+
+            loginMessage.className =
+                "message error";
 
             return;
+
         }
 
 
-        showLoginMessage(
-            "Connexion réussie.",
-            true
-        );
+        loginMessage.textContent =
+            "Connexion réussie.";
+
+        loginMessage.className =
+            "message success";
 
 
-        loginCard.style.display =
-            "none";
+        showDashboard(data.session);
 
-        adminPanel.style.display =
-            "block";
-
-
-        await loadRegistrations();
+        await loadMembers();
 
     }
 );
 
 
-async function loadRegistrations() {
+// =====================================================
+// DÉCONNEXION
+// =====================================================
 
-    registrationsList.innerHTML = `
-        <div class="registration">
+logoutBtn.addEventListener(
+    "click",
+    async function() {
+
+        await supabaseClient.auth.signOut();
+
+        showLogin();
+
+    }
+);
+
+
+// =====================================================
+// CHARGER LES INSCRIPTIONS
+// =====================================================
+
+async function loadMembers() {
+
+    membersList.innerHTML = `
+        <div class="loading">
             Chargement des demandes...
         </div>
     `;
 
 
-    const { data, error } =
-        await db
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
             .from("registrations")
             .select("*")
-            .order("created_at", {
-                ascending: false
-            });
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
 
 
     if (error) {
 
         console.error(error);
 
-        registrationsList.innerHTML = `
-            <div class="registration">
-                Impossible de charger les demandes.
-                <br><br>
-                ${escapeHTML(error.message)}
+        membersList.innerHTML = `
+            <div class="empty">
+                Impossible de charger les inscriptions.
+            </div>
+        `;
+
+        dashboardMessage.textContent =
+            error.message;
+
+        dashboardMessage.className =
+            "message error";
+
+        return;
+
+    }
+
+
+    updateStatistics(data);
+
+    renderMembers(data);
+
+}
+
+
+// =====================================================
+// STATISTIQUES
+// =====================================================
+
+function updateStatistics(members) {
+
+    const total =
+        members.length;
+
+
+    const pending =
+        members.filter(
+            member =>
+                member.status === "pending"
+        ).length;
+
+
+    const approved =
+        members.filter(
+            member =>
+                member.status === "approved"
+        ).length;
+
+
+    const rejected =
+        members.filter(
+            member =>
+                member.status === "rejected"
+        ).length;
+
+
+    totalCount.textContent =
+        total;
+
+
+    pendingCount.textContent =
+        pending;
+
+
+    approvedCount.textContent =
+        approved;
+
+
+    rejectedCount.textContent =
+        rejected;
+
+}
+
+
+// =====================================================
+// AFFICHER LES MEMBRES
+// =====================================================
+
+function renderMembers(members) {
+
+    if (
+        !members ||
+        members.length === 0
+    ) {
+
+        membersList.innerHTML = `
+            <div class="empty">
+                Aucune inscription pour le moment.
             </div>
         `;
 
         return;
+
     }
 
 
-    if (!data || data.length === 0) {
-
-        registrationsList.innerHTML = `
-            <div class="registration">
-                Aucune demande pour le moment.
-            </div>
-        `;
-
-        return;
-    }
+    membersList.innerHTML = "";
 
 
-    registrationsList.innerHTML =
-        data.map(function (item) {
+    members.forEach(
+        member => {
+
+            const row =
+                document.createElement("div");
+
+
+            row.className =
+                "member-row";
+
+
+            const status =
+                member.status || "pending";
+
 
             const date =
-                new Date(
-                    item.created_at
-                ).toLocaleString();
+                member.created_at
+                    ? new Date(
+                        member.created_at
+                    ).toLocaleString("fr-FR")
+                    : "Date inconnue";
 
 
-            let actionButtons = "";
+            row.innerHTML = `
 
+                <div class="member-info">
 
-            if (item.status === "pending") {
+                    <div class="member-avatar">
 
-                actionButtons = `
-                    <button
-                        class="approve-button"
-                        onclick="changeStatus(
-                            '${item.id}',
-                            'approved'
-                        )"
-                    >
-                        Approuver
-                    </button>
-
-                    <button
-                        class="reject-button"
-                        onclick="changeStatus(
-                            '${item.id}',
-                            'rejected'
-                        )"
-                    >
-                        Refuser
-                    </button>
-                `;
-
-            } else if (
-                item.status === "approved"
-            ) {
-
-                actionButtons = `
-                    <button
-                        class="reject-button"
-                        onclick="changeStatus(
-                            '${item.id}',
-                            'pending'
-                        )"
-                    >
-                        Remettre en attente
-                    </button>
-                `;
-
-            } else {
-
-                actionButtons = `
-                    <button
-                        class="approve-button"
-                        onclick="changeStatus(
-                            '${item.id}',
-                            'approved'
-                        )"
-                    >
-                        Approuver
-                    </button>
-                `;
-            }
-
-
-            return `
-                <div class="registration">
-
-                    <div class="registration-top">
-
-                        <div class="registration-name">
-                            ${escapeHTML(item.name)}
-                        </div>
-
-                        <div class="status">
-                            ${escapeHTML(item.status)}
-                        </div>
+                        ${escapeHTML(
+                            getInitials(
+                                member.name
+                            )
+                        )}
 
                     </div>
 
 
-                    <div class="registration-info">
+                    <div class="member-main">
 
-                        <div>
-                            <strong>WhatsApp :</strong>
-                            ${escapeHTML(item.phone)}
-                        </div>
-
-                        <div>
-                            <strong>Pays :</strong>
-                            ${escapeHTML(item.country)}
-                        </div>
-
-                        <div>
-                            <strong>Email :</strong>
+                        <strong>
                             ${escapeHTML(
-                                item.email || "Non renseigné"
+                                member.name ||
+                                "Sans nom"
                             )}
-                        </div>
+                        </strong>
 
-                        <div>
-                            <strong>Date :</strong>
-                            ${escapeHTML(date)}
-                        </div>
-
-                    </div>
-
-
-                    <div class="registration-actions">
-
-                        ${actionButtons}
+                        <span>
+                            ${escapeHTML(
+                                member.phone ||
+                                "Aucun numéro"
+                            )}
+                        </span>
 
                     </div>
 
                 </div>
+
+
+                <div class="member-details">
+
+                    <span>
+                        Pays :
+                        ${escapeHTML(
+                            member.country ||
+                            "Inconnu"
+                        )}
+                    </span>
+
+                    <span>
+                        ${escapeHTML(
+                            member.email ||
+                            "Pas d'e-mail"
+                        )}
+                    </span>
+
+                    <small>
+                        ${date}
+                    </small>
+
+                </div>
+
+
+                <div>
+
+                    <span
+                        class="status ${escapeHTML(status)}"
+                    >
+                        ${getStatusLabel(status)}
+                    </span>
+
+                </div>
+
+
+                <div class="member-actions">
+
+                    ${
+                        status !== "approved"
+                        ? `
+                            <button
+                                class="approve-btn"
+                                data-id="${member.id}"
+                            >
+                                Approuver
+                            </button>
+                        `
+                        : ""
+                    }
+
+
+                    ${
+                        status !== "rejected"
+                        ? `
+                            <button
+                                class="reject-btn"
+                                data-id="${member.id}"
+                            >
+                                Refuser
+                            </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+
             `;
 
-        }).join("");
+
+            membersList.appendChild(row);
+
+        }
+    );
+
+
+    // ================= APPROUVER =================
+
+    document
+        .querySelectorAll(".approve-btn")
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    function() {
+
+                        updateStatus(
+                            button.dataset.id,
+                            "approved"
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    // ================= REFUSER =================
+
+    document
+        .querySelectorAll(".reject-btn")
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    function() {
+
+                        updateStatus(
+                            button.dataset.id,
+                            "rejected"
+                        );
+
+                    }
+                );
+
+            }
+        );
+
 }
 
 
-async function changeStatus(id, status) {
+// =====================================================
+// MODIFIER LE STATUT
+// =====================================================
 
-    adminMessage.textContent =
-        "Modification en cours...";
+async function updateStatus(
+    id,
+    newStatus
+) {
 
-    adminMessage.style.color =
-        "#91a69d";
+    const question =
+        newStatus === "approved"
+            ? "Approuver cette demande ?"
+            : "Refuser cette demande ?";
 
 
-    const { error } =
-        await db
+    if (!confirm(question)) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
             .from("registrations")
             .update({
-                status: status
+
+                status: newStatus
+
             })
-            .eq("id", id);
+            .eq(
+                "id",
+                id
+            );
 
 
     if (error) {
 
         console.error(error);
 
-        adminMessage.textContent =
-            "Erreur : " + error.message;
+        dashboardMessage.textContent =
+            "Erreur : " +
+            error.message;
 
-        adminMessage.style.color =
-            "#ff6b6b";
+        dashboardMessage.className =
+            "message error";
 
         return;
+
     }
 
 
-    adminMessage.textContent =
-        "Statut modifié avec succès.";
+    dashboardMessage.textContent =
+        newStatus === "approved"
+            ? "Demande approuvée."
+            : "Demande refusée.";
 
-    adminMessage.style.color =
-        "#69e89a";
+
+    dashboardMessage.className =
+        "message success";
 
 
-    await loadRegistrations();
+    await loadMembers();
+
 }
 
 
-logoutBtn.addEventListener(
+// =====================================================
+// TÉLÉCHARGER LISSA.VCF
+// =====================================================
+
+downloadVcfBtn.addEventListener(
     "click",
-    async function () {
+    async function() {
 
-        await db.auth.signOut();
+        downloadVcfBtn.disabled = true;
 
-        adminPanel.style.display =
-            "none";
+        downloadVcfBtn.textContent =
+            "Génération...";
 
-        loginCard.style.display =
-            "block";
 
-        loginForm.reset();
+        vcfMessage.textContent =
+            "";
+
+
+        try {
+
+            // -----------------------------------------
+            // Vérifier la connexion admin
+            // -----------------------------------------
+
+            const {
+                data: userData,
+                error: userError
+            } =
+                await supabaseClient.auth.getUser();
+
+
+            if (
+                userError ||
+                !userData.user
+            ) {
+
+                throw new Error(
+                    "Tu dois être connecté en tant qu'admin."
+                );
+
+            }
+
+
+            // -----------------------------------------
+            // Récupérer les membres approuvés
+            // -----------------------------------------
+
+            const {
+                data: members,
+                error
+            } =
+                await supabaseClient
+                    .from("registrations")
+                    .select(
+                        "name,email,phone,country,created_at"
+                    )
+                    .eq(
+                        "status",
+                        "approved"
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: true
+                        }
+                    );
+
+
+            if (error) {
+
+                console.error(error);
+
+                throw new Error(
+                    error.message
+                );
+
+            }
+
+
+            // -----------------------------------------
+            // Aucun membre
+            // -----------------------------------------
+
+            if (
+                !members ||
+                members.length === 0
+            ) {
+
+                throw new Error(
+                    "Aucun membre approuvé pour le moment."
+                );
+
+            }
+
+
+            // -----------------------------------------
+            // CRÉER LE VCF
+            // -----------------------------------------
+
+            let vcfContent = "";
+
+
+            members.forEach(
+                member => {
+
+                    const name =
+                        member.name
+                            ? member.name.trim()
+                            : "Membre";
+
+
+                    const phone =
+                        member.phone
+                            ? member.phone.trim()
+                            : "";
+
+
+                    const email =
+                        member.email
+                            ? member.email.trim()
+                            : "";
+
+
+                    const country =
+                        member.country
+                            ? member.country.trim()
+                            : "";
+
+
+                    const date =
+                        member.created_at
+                            ? new Date(
+                                member.created_at
+                            ).toLocaleDateString(
+                                "fr-FR"
+                            )
+                            : "";
+
+
+                    // Préfixe Lissa
+                    const displayName =
+                        `(LE) ${name}`;
+
+
+                    // ---------------------------------
+                    // VCARD
+                    // ---------------------------------
+
+                    vcfContent +=
+                        "BEGIN:VCARD\r\n";
+
+                    vcfContent +=
+                        "VERSION:3.0\r\n";
+
+
+                    vcfContent +=
+                        `FN:${escapeVCF(
+                            displayName
+                        )}\r\n`;
+
+
+                    vcfContent +=
+                        `N:${escapeVCF(
+                            name
+                        )};;;;\r\n`;
+
+
+                    if (phone) {
+
+                        vcfContent +=
+                            `TEL;TYPE=CELL:${escapeVCF(
+                                phone
+                            )}\r\n`;
+
+                    }
+
+
+                    if (email) {
+
+                        vcfContent +=
+                            `EMAIL:${escapeVCF(
+                                email
+                            )}\r\n`;
+
+                    }
+
+
+                    if (country) {
+
+                        vcfContent +=
+                            `NOTE:Pays: ${escapeVCF(
+                                country
+                            )}\\n`;
+
+                    }
+
+
+                    if (date) {
+
+                        vcfContent +=
+                            `NOTE:Date d'inscription: ${escapeVCF(
+                                date
+                            )}\r\n`;
+
+                    }
+
+
+                    vcfContent +=
+                        "END:VCARD\r\n";
+
+
+                    vcfContent +=
+                        "\r\n";
+
+                }
+            );
+
+
+            // -----------------------------------------
+            // CRÉER LE FICHIER
+            // -----------------------------------------
+
+            const blob =
+                new Blob(
+                    [vcfContent],
+                    {
+                        type:
+                            "text/vcard;charset=utf-8"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(blob);
+
+
+            const link =
+                document.createElement("a");
+
+
+            link.href =
+                url;
+
+
+            link.download =
+                "Lissa.vcf";
+
+
+            document.body.appendChild(link);
+
+
+            link.click();
+
+
+            document.body.removeChild(link);
+
+
+            setTimeout(
+                () => {
+
+                    URL.revokeObjectURL(url);
+
+                },
+                1000
+            );
+
+
+            // -----------------------------------------
+            // MESSAGE
+            // -----------------------------------------
+
+            vcfMessage.textContent =
+                `${members.length} contact(s) approuvé(s) exporté(s) dans Lissa.vcf.`;
+
+            vcfMessage.className =
+                "message success";
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            vcfMessage.textContent =
+                "Erreur : " +
+                error.message;
+
+            vcfMessage.className =
+                "message error";
+
+        } finally {
+
+            downloadVcfBtn.disabled =
+                false;
+
+            downloadVcfBtn.textContent =
+                "Télécharger Lissa.vcf";
+
+        }
 
     }
 );
 
 
+// =====================================================
+// ACTUALISER
+// =====================================================
+
+refreshBtn.addEventListener(
+    "click",
+    async function() {
+
+        await loadMembers();
+
+    }
+);
+
+
+// =====================================================
+// AUTH STATE
+// =====================================================
+
+supabaseClient.auth.onAuthStateChange(
+    async function(
+        event,
+        session
+    ) {
+
+        if (session) {
+
+            showDashboard(session);
+
+            await loadMembers();
+
+        } else {
+
+            showLogin();
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// UTILITAIRES
+// =====================================================
+
+function getInitials(name) {
+
+    if (!name) {
+
+        return "LE";
+
+    }
+
+
+    const words =
+        name
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+
+    if (
+        words.length === 1
+    ) {
+
+        return words[0]
+            .substring(0, 2)
+            .toUpperCase();
+
+    }
+
+
+    return (
+        words[0][0] +
+        words[words.length - 1][0]
+    ).toUpperCase();
+
+}
+
+
+function getStatusLabel(status) {
+
+    if (
+        status === "approved"
+    ) {
+
+        return "Approuvé";
+
+    }
+
+
+    if (
+        status === "rejected"
+    ) {
+
+        return "Refusé";
+
+    }
+
+
+    return "En attente";
+
+}
+
+
 function escapeHTML(value) {
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-                             }
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+  

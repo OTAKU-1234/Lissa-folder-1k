@@ -1,1 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
 
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Admin — Lissa 1K Folder</title>
+
+    <link rel="stylesheet" href="admin.css">
+
+</head>
+
+
+<body>
+
+<header class="admin-navbar">
+
+    <a href="index.html" class="admin-brand">
+
+        <div class="admin-logo">
+            LE
+        </div>
+
+        <div>
+            <strong>LISSA</strong>
+            <span>ADMINISTRATION</span>
+        </div>
+
+    </a>
+
+    <a href="index.html" class="back-link">
+        Retour au site
+    </a>
+
+</header>
+
+
+<main class="admin-main">
+
+
+<section id="loginCard" class="login-section">
+
+    <div class="admin-eyebrow">
+        LISSA 1K FOLDER
+    </div>
+
+    <h1>
+        Espace Admin
+    </h1>
+
+    <p>
+        Connecte-toi pour gérer les demandes.
+    </p>
+
+
+    <form id="loginForm" class="admin-card">
+
+        <div class="field">
+
+            <label for="adminEmail">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="adminEmail"
+                required
+            >
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="adminPassword">
+                Mot de passe
+            </label>
+
+            <input
+                type="password"
+                id="adminPassword"
+                required
+            >
+
+        </div>
+
+
+        <div
+            id="loginMessage"
+            class="message"
+        ></div>
+
+
+        <button
+            type="submit"
+            class="admin-button"
+        >
+            Se connecter
+        </button>
+
+    </form>
+
+</section>
+
+
+<section
+    id="adminPanel"
+    class="dashboard"
+    style="display:none;"
+>
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <div class="admin-eyebrow">
+                TABLEAU DE BORD
+            </div>
+
+            <h1>
+                Demandes
+            </h1>
+
+            <p>
+                Gère les inscriptions Lissa 1K Folder.
+            </p>
+
+        </div>
+
+
+        <button
+            id="logoutBtn"
+            class="logout-button"
+        >
+            Déconnexion
+        </button>
+
+    </div>
+
+
+    <div
+        id="adminMessage"
+        class="message"
+    ></div>
+
+
+    <div
+        id="registrationsList"
+        class="registrations"
+    ></div>
+
+</section>
+
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase-client.js"></script>
+
+<script src="admin.js"></script>
+
+</body>
+
+</html>

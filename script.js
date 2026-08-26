@@ -1,283 +1,784 @@
-const db = window.supabaseClient;
+// =====================================================
+// LISSA 1K FOLDER — ADMIN
+// =====================================================
 
-const form = document.getElementById("registrationForm");
-const message = document.getElementById("formMessage");
-const submitBtn = document.getElementById("submitBtn");
+const loginSection =
+    document.getElementById("loginSection");
 
-const countrySelect = document.getElementById("country");
-const countryCode = document.getElementById("countryCode");
+const adminPanel =
+    document.getElementById("adminPanel");
 
-const membersList = document.getElementById("membersList");
-const memberCount = document.getElementById("memberCount");
+const loginForm =
+    document.getElementById("loginForm");
+
+const emailInput =
+    document.getElementById("email");
+
+const passwordInput =
+    document.getElementById("password");
+
+const loginBtn =
+    document.getElementById("loginBtn");
+
+const loginMessage =
+    document.getElementById("loginMessage");
+
+const logoutBtn =
+    document.getElementById("logoutBtn");
+
+const refreshBtn =
+    document.getElementById("refreshBtn");
+
+const membersList =
+    document.getElementById("membersList");
+
+const adminMessage =
+    document.getElementById("adminMessage");
+
+const downloadVcfBtn =
+    document.getElementById("downloadVcfBtn");
+
+const vcfMessage =
+    document.getElementById("vcfMessage");
+
+const totalCount =
+    document.getElementById("totalCount");
+
+const pendingCount =
+    document.getElementById("pendingCount");
+
+const approvedCount =
+    document.getElementById("approvedCount");
 
 
-const countryCodes = {
-    "Haïti": "+509",
-    "République dominicaine": "+1",
-    "États-Unis": "+1",
-    "Canada": "+1",
-    "France": "+33",
-    "Belgique": "+32",
-    "Suisse": "+41",
-    "Autre": "+"
-};
+// =====================================================
+// AFFICHER LOGIN
+// =====================================================
 
+function showLogin() {
 
-function showMessage(text, success = false) {
+    loginSection.classList.remove("hidden");
 
-    message.textContent = text;
+    adminPanel.classList.add("hidden");
 
-    message.style.color =
-        success
-            ? "#69e89a"
-            : "#ff6b6b";
 }
 
 
-countrySelect.addEventListener("change", function () {
+// =====================================================
+// AFFICHER ADMIN
+// =====================================================
 
-    const selectedCountry =
-        countrySelect.value;
+function showAdmin() {
 
-    countryCode.textContent =
-        countryCodes[selectedCountry] || "+";
+    loginSection.classList.add("hidden");
 
-});
+    adminPanel.classList.remove("hidden");
+
+}
 
 
-form.addEventListener("submit", async function (event) {
+// =====================================================
+// CONNEXION
+// =====================================================
+
+loginForm.addEventListener("submit", async function(event) {
 
     event.preventDefault();
 
+    loginBtn.disabled = true;
 
-    const name =
-        document.getElementById("name")
-            .value
-            .trim();
+    loginBtn.textContent = "Connexion...";
 
-    const country =
-        countrySelect.value
-            .trim();
-
-    const phone =
-        document.getElementById("phone")
-            .value
-            .trim();
+    loginMessage.textContent = "";
 
     const email =
-        document.getElementById("email")
-            .value
-            .trim();
+        emailInput.value.trim();
+
+    const password =
+        passwordInput.value;
 
 
-    if (name.length < 2) {
+    const {
+        data,
+        error
+    } = await supabaseClient.auth.signInWithPassword({
 
-        showMessage(
-            "Tanpri antre non ou."
-        );
+        email: email,
 
-        return;
-    }
+        password: password
 
-
-    if (!country) {
-
-        showMessage(
-            "Tanpri chwazi peyi ou."
-        );
-
-        return;
-    }
-
-
-    const cleanPhone =
-        phone.replace(/\D/g, "");
-
-
-    if (cleanPhone.length < 6) {
-
-        showMessage(
-            "Tanpri antre yon nimewo WhatsApp valab."
-        );
-
-        return;
-    }
-
-
-    if (country === "Autre") {
-
-        showMessage(
-            "Pou kounye a, chwazi youn nan peyi ki disponib."
-        );
-
-        return;
-    }
-
-
-    const code =
-        countryCodes[country];
-
-
-    const fullPhone =
-        code.replace("+", "") +
-        cleanPhone;
-
-
-    submitBtn.disabled = true;
-
-    submitBtn.textContent =
-        "Ap voye demann lan...";
-
-    showMessage(
-        "Ap voye demann ou...",
-        true
-    );
-
-
-    const { error } =
-        await db
-            .from("registrations")
-            .insert({
-                name: name,
-                email: email || null,
-                phone: "+" + fullPhone,
-                country: country,
-                status: "pending"
-            });
+    });
 
 
     if (error) {
 
-        console.error(
-            "SUPABASE ERROR:",
-            error
-        );
+        console.error(error);
 
-        showMessage(
-            "Yon pwoblèm rive : " +
-            error.message
-        );
+        loginMessage.textContent =
+            "E-mail ou mot de passe incorrect.";
 
-        submitBtn.disabled = false;
+        loginMessage.style.color = "#e95d5d";
 
-        submitBtn.textContent =
-            "Envoyer ma demande";
+        loginBtn.disabled = false;
+
+        loginBtn.textContent =
+            "Se connecter";
 
         return;
+
     }
 
 
-    showMessage(
-        "Demann ou voye avèk siksè. Tann apwobasyon admin lan.",
-        true
-    );
+    showAdmin();
+
+    await loadMembers();
 
 
-    form.reset();
+    loginBtn.disabled = false;
 
-    countryCode.textContent =
-        "+509";
-
-
-    submitBtn.disabled = false;
-
-    submitBtn.textContent =
-        "Envoyer ma demande";
+    loginBtn.textContent =
+        "Se connecter";
 
 });
 
 
-async function loadMembers() {
+// =====================================================
+// VÉRIFIER LA SESSION
+// =====================================================
 
-    if (!db) return;
+async function checkSession() {
 
-
-    const { data, error } =
-        await db
-            .from("registrations")
-            .select("name, country")
-            .eq("status", "approved")
-            .order("created_at", {
-                ascending: false
-            });
+    const {
+        data,
+        error
+    } = await supabaseClient.auth.getSession();
 
 
     if (error) {
 
-        console.error(
-            "MEMBERS ERROR:",
-            error
-        );
+        console.error(error);
+
+        showLogin();
+
+        return;
+
+    }
+
+
+    if (data.session) {
+
+        showAdmin();
+
+        await loadMembers();
+
+    } else {
+
+        showLogin();
+
+    }
+
+}
+
+
+// =====================================================
+// DÉCONNEXION
+// =====================================================
+
+logoutBtn.addEventListener("click", async function() {
+
+    await supabaseClient.auth.signOut();
+
+    showLogin();
+
+});
+
+
+// =====================================================
+// CHARGER LES MEMBRES
+// =====================================================
+
+async function loadMembers() {
+
+    membersList.innerHTML = `
+        <div class="loading">
+            Chargement...
+        </div>
+    `;
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("registrations")
+        .select("*")
+        .order("created_at", {
+            ascending: false
+        });
+
+
+    if (error) {
+
+        console.error(error);
 
         membersList.innerHTML = `
-            <div class="empty-members">
-                Impossible de charger les membres.
+            <div class="empty">
+                Impossible de charger les demandes.
+            </div>
+        `;
+
+        adminMessage.textContent =
+            error.message;
+
+        adminMessage.style.color =
+            "#e95d5d";
+
+        return;
+
+    }
+
+
+    updateStats(data);
+
+    displayMembers(data);
+
+}
+
+
+// =====================================================
+// STATISTIQUES
+// =====================================================
+
+function updateStats(members) {
+
+    const total =
+        members.length;
+
+
+    const pending =
+        members.filter(
+            member =>
+                member.status === "pending"
+        ).length;
+
+
+    const approved =
+        members.filter(
+            member =>
+                member.status === "approved"
+        ).length;
+
+
+    totalCount.textContent =
+        total;
+
+    pendingCount.textContent =
+        pending;
+
+    approvedCount.textContent =
+        approved;
+
+}
+
+
+// =====================================================
+// AFFICHER LES MEMBRES
+// =====================================================
+
+function displayMembers(members) {
+
+    if (!members.length) {
+
+        membersList.innerHTML = `
+            <div class="empty">
+                Aucune demande pour le moment.
             </div>
         `;
 
         return;
+
     }
 
 
-    memberCount.textContent =
-        data.length;
+    membersList.innerHTML = "";
 
 
-    if (data.length === 0) {
+    members.forEach(member => {
 
-        membersList.innerHTML = `
-            <div class="empty-members">
-                Aucun membre approuvé pour le moment.
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "member";
+
+
+        const date =
+            member.created_at
+                ? new Date(
+                    member.created_at
+                ).toLocaleDateString("fr-FR")
+                : "";
+
+
+        const status =
+            member.status || "pending";
+
+
+        div.innerHTML = `
+
+            <div>
+
+                <div class="member-name">
+                    ${escapeHTML(
+                        member.name || "Sans nom"
+                    )}
+                </div>
+
+                <div class="member-info">
+                    ${escapeHTML(
+                        member.phone || "Pas de numéro"
+                    )}
+                </div>
+
             </div>
-        `;
-
-        return;
-    }
 
 
-    membersList.innerHTML =
-        data.map(function (member) {
+            <div>
 
-            const firstLetter =
-                member.name
-                    .charAt(0)
-                    .toUpperCase();
+                <div class="member-info">
+                    Pays :
+                    ${escapeHTML(
+                        member.country || "Inconnu"
+                    )}
+                </div>
 
-            return `
-                <div class="member-item">
+                <div class="member-info">
+                    ${escapeHTML(
+                        member.email || "Pas d'e-mail"
+                    )}
+                </div>
 
-                    <div class="member-avatar">
-                        ${escapeHTML(firstLetter)}
-                    </div>
+                <div class="member-info">
+                    ${date}
+                </div>
 
-                    <div class="member-info">
+            </div>
 
-                        <strong>
-                            ${escapeHTML(member.name)}
-                        </strong>
 
-                        <span>
-                            ${escapeHTML(member.country)}
-                        </span>
+            <div>
 
-                    </div>
+                <span class="status ${status}">
+                    ${getStatus(status)}
+                </span>
+
+
+                <div class="actions">
+
+                    ${
+                        status !== "approved"
+                        ? `
+                            <button
+                                class="approve"
+                                data-id="${member.id}"
+                            >
+                                Approuver
+                            </button>
+                        `
+                        : ""
+                    }
+
+
+                    ${
+                        status !== "rejected"
+                        ? `
+                            <button
+                                class="reject"
+                                data-id="${member.id}"
+                            >
+                                Refuser
+                            </button>
+                        `
+                        : ""
+                    }
 
                 </div>
-            `;
 
-        }).join("");
+            </div>
+
+        `;
+
+
+        membersList.appendChild(div);
+
+    });
+
+
+    document
+        .querySelectorAll(".approve")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => updateStatus(
+                    button.dataset.id,
+                    "approved"
+                )
+            );
+
+        });
+
+
+    document
+        .querySelectorAll(".reject")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => updateStatus(
+                    button.dataset.id,
+                    "rejected"
+                )
+            );
+
+        });
+
+}
+
+
+// =====================================================
+// CHANGER LE STATUT
+// =====================================================
+
+async function updateStatus(id, status) {
+
+    const confirmation =
+        confirm(
+            status === "approved"
+                ? "Approuver cette demande ?"
+                : "Refuser cette demande ?"
+        );
+
+
+    if (!confirmation) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } = await supabaseClient
+        .from("registrations")
+        .update({
+            status: status
+        })
+        .eq("id", id);
+
+
+    if (error) {
+
+        console.error(error);
+
+        adminMessage.textContent =
+            error.message;
+
+        adminMessage.style.color =
+            "#e95d5d";
+
+        return;
+
+    }
+
+
+    adminMessage.textContent =
+        status === "approved"
+            ? "Demande approuvée."
+            : "Demande refusée.";
+
+    adminMessage.style.color =
+        "#159447";
+
+
+    await loadMembers();
+
+}
+
+
+// =====================================================
+// TÉLÉCHARGER LISSA.VCF
+// =====================================================
+
+downloadVcfBtn.addEventListener(
+    "click",
+    async function() {
+
+        downloadVcfBtn.disabled = true;
+
+        downloadVcfBtn.textContent =
+            "Génération...";
+
+
+        vcfMessage.textContent = "";
+
+
+        try {
+
+            const {
+                data: sessionData
+            } =
+                await supabaseClient.auth.getSession();
+
+
+            if (!sessionData.session) {
+
+                throw new Error(
+                    "Vous devez être connecté."
+                );
+
+            }
+
+
+            const {
+                data: members,
+                error
+            } =
+                await supabaseClient
+                    .from("registrations")
+                    .select(
+                        "name,email,phone,country,created_at"
+                    )
+                    .eq(
+                        "status",
+                        "approved"
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: true
+                        }
+                    );
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            if (!members.length) {
+
+                throw new Error(
+                    "Aucun membre approuvé."
+                );
+
+            }
+
+
+            let vcf = "";
+
+
+            members.forEach(member => {
+
+                const name =
+                    member.name || "Membre";
+
+                const displayName =
+                    `(LE) ${name}`;
+
+
+                vcf +=
+                    "BEGIN:VCARD\r\n";
+
+                vcf +=
+                    "VERSION:3.0\r\n";
+
+                vcf +=
+                    `FN:${escapeVCF(displayName)}\r\n`;
+
+                vcf +=
+                    `N:${escapeVCF(name)};;;;\r\n`;
+
+
+                if (member.phone) {
+
+                    vcf +=
+                        `TEL;TYPE=CELL:${escapeVCF(
+                            member.phone
+                        )}\r\n`;
+
+                }
+
+
+                if (member.email) {
+
+                    vcf +=
+                        `EMAIL:${escapeVCF(
+                            member.email
+                        )}\r\n`;
+
+                }
+
+
+                if (member.country) {
+
+                    vcf +=
+                        `NOTE:Pays: ${escapeVCF(
+                            member.country
+                        )}\r\n`;
+
+                }
+
+
+                if (member.created_at) {
+
+                    const date =
+                        new Date(
+                            member.created_at
+                        ).toLocaleDateString(
+                            "fr-FR"
+                        );
+
+
+                    vcf +=
+                        `NOTE:Date d'inscription: ${escapeVCF(
+                            date
+                        )}\r\n`;
+
+                }
+
+
+                vcf +=
+                    "END:VCARD\r\n";
+
+            });
+
+
+            const blob =
+                new Blob(
+                    [vcf],
+                    {
+                        type:
+                            "text/vcard;charset=utf-8"
+                    }
+                );
+
+
+            const url =
+                URL.createObjectURL(blob);
+
+
+            const link =
+                document.createElement("a");
+
+
+            link.href = url;
+
+            link.download =
+                "Lissa.vcf";
+
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+
+            URL.revokeObjectURL(url);
+
+
+            vcfMessage.textContent =
+                `${members.length} contact(s) exporté(s) dans Lissa.vcf.`;
+
+            vcfMessage.style.color =
+                "#159447";
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            vcfMessage.textContent =
+                "Erreur : " +
+                error.message;
+
+            vcfMessage.style.color =
+                "#e95d5d";
+
+        }
+
+
+        downloadVcfBtn.disabled = false;
+
+        downloadVcfBtn.textContent =
+            "Télécharger Lissa.vcf";
+
+    }
+);
+
+
+// =====================================================
+// ACTUALISER
+// =====================================================
+
+refreshBtn.addEventListener(
+    "click",
+    loadMembers
+);
+
+
+// =====================================================
+// UTILITAIRES
+// =====================================================
+
+function getStatus(status) {
+
+    if (status === "approved") {
+
+        return "Approuvé";
+
+    }
+
+
+    if (status === "rejected") {
+
+        return "Refusé";
+
+    }
+
+
+    return "En attente";
+
 }
 
 
 function escapeHTML(value) {
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
 }
 
 
-loadMembers();
+function escapeVCF(value) {
+
+    return String(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/\r?\n/g, "\\n")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,");
+
+}
+
+
+// =====================================================
+// DÉMARRAGE
+// =====================================================
+
+checkSession();

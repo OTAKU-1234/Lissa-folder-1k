@@ -1,420 +1,343 @@
+// =====================================================
+// LISSA 1K FOLDER — SCRIPT PRINCIPAL
+// =====================================================
+
+// Vérifier que Supabase est bien chargé
+if (typeof supabase === "undefined") {
+console.error("Supabase JS n'est pas chargé.");
+}
+
+// Récupérer le client créé dans supabase-client.js
 const db = window.supabaseClient;
 
+// Éléments du formulaire
 const form = document.getElementById("registrationForm");
 const message = document.getElementById("formMessage");
 const submitBtn = document.getElementById("submitBtn");
 
-const countrySelect = document.getElementById("country");
-const countryCode = document.getElementById("countryCode");
-
+// Éléments des membres
 const membersList = document.getElementById("membersList");
-const memberCount = document.getElementById("memberCount");
+const memberCounters = document.querySelectorAll("#memberCount");
 
+// =====================================================
+// VÉRIFICATION
+// =====================================================
 
-const countryCodes = {
-    "Haïti": "+509",
-    "République dominicaine": "+1",
-    "États-Unis": "+1",
-    "Canada": "+1",
-    "France": "+33",
-    "Belgique": "+32",
-    "Suisse": "+41",
-    "Autre": "+"
-};
-
+if (!db) {
+console.error("supabaseClient est introuvable.");
+showMessage(
+"Erreur de connexion au serveur.",
+"error"
+);
+}
 
 // =====================================================
 // MESSAGE
 // =====================================================
 
-function showMessage(text, success = false) {
+function showMessage(text, type) {
 
-    if (!message) return;
+if (!message) return;  
 
-    message.textContent = text;
+message.textContent = text;  
 
-    message.style.color =
-        success
-            ? "#69e89a"
-            : "#ff6b6b";
+if (type === "success") {  
+    message.style.color = "#69e89a";  
+} else {  
+    message.style.color = "#ff6b6b";  
 }
 
-
-// =====================================================
-// CHANGEMENT DE PAYS
-// =====================================================
-
-countrySelect.addEventListener("change", function () {
-
-    const selectedCountry =
-        countrySelect.value;
-
-    countryCode.textContent =
-        countryCodes[selectedCountry] || "+";
-
-});
-
+}
 
 // =====================================================
 // ENVOI DU FORMULAIRE
 // =====================================================
 
-form.addEventListener("submit", async function (event) {
+if (form) {
 
-    event.preventDefault();
+form.addEventListener("submit", async function (event) {  
 
+    event.preventDefault();  
 
-    const name =
-        document.getElementById("name")
-            .value
-            .trim();
+    // Récupération des valeurs  
+    const name = document  
+        .getElementById("name")  
+        .value  
+        .trim();  
 
-    const country =
-        countrySelect.value
-            .trim();
+    const phone = document  
+        .getElementById("phone")  
+        .value  
+        .trim();  
 
-    const phone =
-        document.getElementById("phone")
-            .value
-            .trim();
+    const country = document  
+        .getElementById("country")  
+        .value  
+        .trim();  
 
-    const email =
-        document.getElementById("email")
-            .value
-            .trim();
+    const email = document  
+        .getElementById("email")  
+        .value  
+        .trim();  
 
 
-    // =================================================
-    // VALIDATION
-    // =================================================
+    // ================= VALIDATION =================  
 
-    if (name.length < 2) {
+    if (name.length < 2) {  
 
-        showMessage(
-            "Tanpri antre non ou."
-        );
+        showMessage(  
+            "Tanpri antre non ou.",  
+            "error"  
+        );  
 
-        return;
-    }
+        return;  
+    }  
 
 
-    if (!country) {
+    if (phone.length < 6) {  
 
-        showMessage(
-            "Tanpri chwazi peyi ou."
-        );
+        showMessage(  
+            "Tanpri antre yon nimewo WhatsApp valab.",  
+            "error"  
+        );  
 
-        return;
-    }
+        return;  
+    }  
 
 
-    const cleanPhone =
-        phone.replace(/\D/g, "");
+    if (!country) {  
 
+        showMessage(  
+            "Tanpri chwazi peyi ou.",  
+            "error"  
+        );  
 
-    if (cleanPhone.length < 6) {
+        return;  
+    }  
 
-        showMessage(
-            "Tanpri antre yon nimewo WhatsApp valab."
-        );
 
-        return;
-    }
+    // ================= CHARGEMENT =================  
 
+    showMessage(  
+        "Ap voye demann ou...",  
+        "success"  
+    );  
 
-    if (country === "Autre") {
+    if (submitBtn) {  
 
-        showMessage(
-            "Pou kounye a, chwazi youn nan peyi ki disponib."
-        );
+        submitBtn.disabled = true;  
 
-        return;
-    }
+        const buttonText =  
+            submitBtn.querySelector("span");  
 
+        if (buttonText) {  
+            buttonText.textContent =  
+                "Ap voye...";  
+        }  
+    }  
 
-    // =================================================
-    // CONSTRUIRE LE NUMÉRO COMPLET
-    // =================================================
 
-    const code =
-        countryCodes[country];
+    try {  
 
+        // ================= SUPABASE INSERT =================  
 
-    const fullPhone =
-        code.replace("+", "") +
-        cleanPhone;
+        const { data, error } = await db  
+            .from("registrations")  
+            .insert([  
+                {  
+                    name: name,  
+                    email: email || null,  
+                    phone: phone,  
+                    status: "pending",  
+                    country: country  
+                }  
+            ])  
+            .select();  
 
 
-    const normalizedPhone =
-        "+" + fullPhone;
+        // ================= ERREUR =================  
 
+        if (error) {  
 
-    // =================================================
-    // BLOQUER LE BOUTON
-    // =================================================
+            console.error(  
+                "SUPABASE ERROR:",  
+                error  
+            );  
 
-    submitBtn.disabled = true;
+            showMessage(  
+                "Erreur : " + error.message,  
+                "error"  
+            );  
 
-    submitBtn.textContent =
-        "Ap verifye...";
+            return;  
+        }  
 
 
-    showMessage(
-        "Ap verifye nimewo ou...",
-        true
-    );
+        // ================= SUCCÈS =================  
 
+        console.log(  
+            "Inscription enregistrée :",  
+            data  
+        );  
 
-    try {
+        showMessage(  
+            "Demann ou voye avèk siksè. Tann apwobasyon admin lan.",  
+            "success"  
+        );  
 
-        // =================================================
-        // VÉRIFIER SI LE NUMÉRO EXISTE DÉJÀ
-        // =================================================
 
-        const { data: existing, error: checkError } =
-            await db
-                .from("registrations")
-                .select("id, status")
-                .eq("phone", normalizedPhone)
-                .limit(1);
+        // Vider le formulaire  
+        form.reset();  
 
 
-        // =================================================
-        // ERREUR DE VÉRIFICATION
-        // =================================================
+        // Actualiser les membres  
+        loadMembers();  
 
-        if (checkError) {
+    } catch (error) {  
 
-            console.error(
-                "PHONE CHECK ERROR:",
-                checkError
-            );
+        console.error(  
+            "ERREUR JAVASCRIPT:",  
+            error  
+        );  
 
-            showMessage(
-                "Impossible de vérifier le numéro. Tanpri eseye ankò."
-            );
+        showMessage(  
+            "Yon pwoblèm rive : " + error.message,  
+            "error"  
+        );  
 
-            return;
-        }
+    } finally {  
 
+        // Réactiver le bouton  
+        if (submitBtn) {  
 
-        // =================================================
-        // NUMÉRO DÉJÀ UTILISÉ
-        // =================================================
+            submitBtn.disabled = false;  
 
-        if (existing && existing.length > 0) {
+            const buttonText =  
+                submitBtn.querySelector("span");  
 
-            const status =
-                existing[0].status;
-
-
-            if (status === "approved") {
-
-                showMessage(
-                    "Nimewo sa a deja se yon manm Lissa."
-                );
-
-            } else {
-
-                showMessage(
-                    "Ou deja voye yon demann. Tanpri tann apwobasyon admin lan."
-                );
-            }
-
-
-            return;
-        }
-
-
-        // =================================================
-        // NOUVEAU NUMÉRO → ENREGISTRER
-        // =================================================
-
-        submitBtn.textContent =
-            "Ap voye demann lan...";
-
-
-        showMessage(
-            "Ap voye demann ou...",
-            true
-        );
-
-
-        const { error } =
-            await db
-                .from("registrations")
-                .insert({
-                    name: name,
-                    email: email || null,
-                    phone: normalizedPhone,
-                    country: country,
-                    status: "pending"
-                });
-
-
-        // =================================================
-        // ERREUR SUPABASE
-        // =================================================
-
-        if (error) {
-
-            console.error(
-                "SUPABASE ERROR:",
-                error
-            );
-
-
-            // Protection supplémentaire :
-            // 23505 = violation UNIQUE
-            if (
-                error.code === "23505" ||
-                error.message
-                    .toLowerCase()
-                    .includes("duplicate")
-            ) {
-
-                showMessage(
-                    "Ou deja voye yon demann avèk nimewo sa a."
-                );
-
-                return;
-            }
-
-
-            showMessage(
-                "Yon pwoblèm rive : " +
-                error.message
-            );
-
-            return;
-        }
-
-
-        // =================================================
-        // SUCCÈS
-        // =================================================
-
-        showMessage(
-            "Demann ou voye avèk siksè. Tann apwobasyon admin lan.",
-            true
-        );
-
-
-        form.reset();
-
-        countryCode.textContent =
-            "+509";
-
-
-    } catch (error) {
-
-        console.error(
-            "JAVASCRIPT ERROR:",
-            error
-        );
-
-        showMessage(
-            "Yon pwoblèm rive. Tanpri eseye ankò."
-        );
-
-
-    } finally {
-
-        submitBtn.disabled = false;
-
-        submitBtn.textContent =
-            "Envoyer ma demande";
-    }
+            if (buttonText) {  
+                buttonText.textContent =  
+                    "Envoyer ma demande";  
+            }  
+        }  
+    }  
 
 });
 
+}
 
 // =====================================================
-// CHARGER LES MEMBRES
+// CHARGER LES MEMBRES APPROUVÉS
 // =====================================================
 
 async function loadMembers() {
 
-    if (!db) return;
+if (!db || !membersList) return;  
+
+try {  
+
+    const { data, error } = await db  
+        .from("registrations")  
+        .select("name, country, created_at")  
+        .eq("status", "approved")  
+        .order("created_at", {  
+            ascending: false  
+        });  
 
 
-    const { data, error } =
-        await db
-            .from("registrations")
-            .select("name, country")
-            .eq("status", "approved")
-            .order("created_at", {
-                ascending: false
-            });
+    if (error) {  
+
+        console.error(  
+            "Erreur chargement membres:",  
+            error  
+        );  
+
+        return;  
+    }  
 
 
-    if (error) {
-
-        console.error(
-            "MEMBERS ERROR:",
-            error
-        );
-
-        membersList.innerHTML = `
-            <div class="empty-members">
-                Impossible de charger les membres.
-            </div>
-        `;
-
-        return;
-    }
+    // Nombre de membres  
+    const count = data  
+        ? data.length  
+        : 0;  
 
 
-    memberCount.textContent =
-        data.length;
+    memberCounters.forEach(function (counter) {  
+
+        counter.textContent = count;  
+
+    });  
 
 
-    if (data.length === 0) {
+    // Aucun membre  
+    if (!data || data.length === 0) {  
 
-        membersList.innerHTML = `
-            <div class="empty-members">
-                Aucun membre approuvé pour le moment.
-            </div>
-        `;
+        membersList.innerHTML = `  
+            <div class="empty-members">  
 
-        return;
-    }
+                <div class="empty-icon">  
+                    LE  
+                </div>  
+
+                <strong>  
+                    Aucun membre pour le moment.  
+                </strong>  
+
+                <span>  
+                    Sois le premier à rejoindre la communauté.  
+                </span>  
+
+            </div>  
+        `;  
+
+        return;  
+    }  
 
 
-    membersList.innerHTML =
-        data.map(function (member) {
+    // Afficher les membres  
+    membersList.innerHTML = data  
+        .map(function (member) {  
 
-            const firstLetter =
-                member.name
-                    ? member.name.charAt(0).toUpperCase()
-                    : "L";
+            const firstLetter =  
+                member.name  
+                    ? member.name.charAt(0).toUpperCase()  
+                    : "L";  
+
+            return `  
+                <div class="member-item">  
+
+                    <div class="member-avatar">  
+                        ${firstLetter}  
+                    </div>  
+
+                    <div class="member-info">  
+
+                        <strong>  
+                            ${escapeHTML(member.name)}  
+                        </strong>  
+
+                        <span>  
+                            ${escapeHTML(member.country || "")}  
+                        </span>  
+
+                    </div>  
+
+                </div>  
+            `;  
+
+        })  
+        .join("");  
 
 
-            return `
-                <div class="member-item">
+} catch (error) {  
 
-                    <div class="member-avatar">
-                        ${escapeHTML(firstLetter)}
-                    </div>
-
-                    <div class="member-info">
-
-                        <strong>
-                            ${escapeHTML(member.name)}
-                        </strong>
-
-                        <span>
-                            ${escapeHTML(member.country || "")}
-                        </span>
-
-                    </div>
-
-                </div>
-            `;
-
-        }).join("");
+    console.error(  
+        "Erreur membres:",  
+        error  
+    );  
 }
 
+}
 
 // =====================================================
 // PROTECTION HTML
@@ -422,14 +345,16 @@ async function loadMembers() {
 
 function escapeHTML(value) {
 
-    return String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
+if (!value) return "";  
 
+return String(value)  
+    .replace(/&/g, "&amp;")  
+    .replace(/</g, "&lt;")  
+    .replace(/>/g, "&gt;")  
+    .replace(/"/g, "&quot;")  
+    .replace(/'/g, "&#039;");
+
+}
 
 // =====================================================
 // DÉMARRAGE

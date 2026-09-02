@@ -23,7 +23,13 @@ const countryCodes = {
 };
 
 
+// =====================================================
+// MESSAGE
+// =====================================================
+
 function showMessage(text, success = false) {
+
+    if (!message) return;
 
     message.textContent = text;
 
@@ -33,6 +39,10 @@ function showMessage(text, success = false) {
             : "#ff6b6b";
 }
 
+
+// =====================================================
+// CHANGEMENT DE PAYS
+// =====================================================
 
 countrySelect.addEventListener("change", function () {
 
@@ -44,6 +54,10 @@ countrySelect.addEventListener("change", function () {
 
 });
 
+
+// =====================================================
+// ENVOI DU FORMULAIRE
+// =====================================================
 
 form.addEventListener("submit", async function (event) {
 
@@ -69,6 +83,10 @@ form.addEventListener("submit", async function (event) {
             .value
             .trim();
 
+
+    // =================================================
+    // VALIDATION
+    // =================================================
 
     if (name.length < 2) {
 
@@ -114,6 +132,10 @@ form.addEventListener("submit", async function (event) {
     }
 
 
+    // =================================================
+    // CONSTRUIRE LE NUMÉRO COMPLET
+    // =================================================
+
     const code =
         countryCodes[country];
 
@@ -123,69 +145,193 @@ form.addEventListener("submit", async function (event) {
         cleanPhone;
 
 
+    const normalizedPhone =
+        "+" + fullPhone;
+
+
+    // =================================================
+    // BLOQUER LE BOUTON
+    // =================================================
+
     submitBtn.disabled = true;
 
     submitBtn.textContent =
-        "Ap voye demann lan...";
+        "Ap verifye...";
+
 
     showMessage(
-        "Ap voye demann ou...",
+        "Ap verifye nimewo ou...",
         true
     );
 
 
-    const { error } =
-        await db
-            .from("registrations")
-            .insert({
-                name: name,
-                email: email || null,
-                phone: "+" + fullPhone,
-                country: country,
-                status: "pending"
-            });
+    try {
+
+        // =================================================
+        // VÉRIFIER SI LE NUMÉRO EXISTE DÉJÀ
+        // =================================================
+
+        const { data: existing, error: checkError } =
+            await db
+                .from("registrations")
+                .select("id, status")
+                .eq("phone", normalizedPhone)
+                .limit(1);
 
 
-    if (error) {
+        // =================================================
+        // ERREUR DE VÉRIFICATION
+        // =================================================
+
+        if (checkError) {
+
+            console.error(
+                "PHONE CHECK ERROR:",
+                checkError
+            );
+
+            showMessage(
+                "Impossible de vérifier le numéro. Tanpri eseye ankò."
+            );
+
+            return;
+        }
+
+
+        // =================================================
+        // NUMÉRO DÉJÀ UTILISÉ
+        // =================================================
+
+        if (existing && existing.length > 0) {
+
+            const status =
+                existing[0].status;
+
+
+            if (status === "approved") {
+
+                showMessage(
+                    "Nimewo sa a deja se yon manm Lissa."
+                );
+
+            } else {
+
+                showMessage(
+                    "Ou deja voye yon demann. Tanpri tann apwobasyon admin lan."
+                );
+            }
+
+
+            return;
+        }
+
+
+        // =================================================
+        // NOUVEAU NUMÉRO → ENREGISTRER
+        // =================================================
+
+        submitBtn.textContent =
+            "Ap voye demann lan...";
+
+
+        showMessage(
+            "Ap voye demann ou...",
+            true
+        );
+
+
+        const { error } =
+            await db
+                .from("registrations")
+                .insert({
+                    name: name,
+                    email: email || null,
+                    phone: normalizedPhone,
+                    country: country,
+                    status: "pending"
+                });
+
+
+        // =================================================
+        // ERREUR SUPABASE
+        // =================================================
+
+        if (error) {
+
+            console.error(
+                "SUPABASE ERROR:",
+                error
+            );
+
+
+            // Protection supplémentaire :
+            // 23505 = violation UNIQUE
+            if (
+                error.code === "23505" ||
+                error.message
+                    .toLowerCase()
+                    .includes("duplicate")
+            ) {
+
+                showMessage(
+                    "Ou deja voye yon demann avèk nimewo sa a."
+                );
+
+                return;
+            }
+
+
+            showMessage(
+                "Yon pwoblèm rive : " +
+                error.message
+            );
+
+            return;
+        }
+
+
+        // =================================================
+        // SUCCÈS
+        // =================================================
+
+        showMessage(
+            "Demann ou voye avèk siksè. Tann apwobasyon admin lan.",
+            true
+        );
+
+
+        form.reset();
+
+        countryCode.textContent =
+            "+509";
+
+
+    } catch (error) {
 
         console.error(
-            "SUPABASE ERROR:",
+            "JAVASCRIPT ERROR:",
             error
         );
 
         showMessage(
-            "Yon pwoblèm rive : " +
-            error.message
+            "Yon pwoblèm rive. Tanpri eseye ankò."
         );
+
+
+    } finally {
 
         submitBtn.disabled = false;
 
         submitBtn.textContent =
             "Envoyer ma demande";
-
-        return;
     }
-
-
-    showMessage(
-        "Demann ou voye avèk siksè. Tann apwobasyon admin lan.",
-        true
-    );
-
-
-    form.reset();
-
-    countryCode.textContent =
-        "+509";
-
-
-    submitBtn.disabled = false;
-
-    submitBtn.textContent =
-        "Envoyer ma demande";
 
 });
 
+
+// =====================================================
+// CHARGER LES MEMBRES
+// =====================================================
 
 async function loadMembers() {
 
@@ -240,8 +386,9 @@ async function loadMembers() {
 
             const firstLetter =
                 member.name
-                    .charAt(0)
-                    .toUpperCase();
+                    ? member.name.charAt(0).toUpperCase()
+                    : "L";
+
 
             return `
                 <div class="member-item">
@@ -257,7 +404,7 @@ async function loadMembers() {
                         </strong>
 
                         <span>
-                            ${escapeHTML(member.country)}
+                            ${escapeHTML(member.country || "")}
                         </span>
 
                     </div>
@@ -269,9 +416,13 @@ async function loadMembers() {
 }
 
 
+// =====================================================
+// PROTECTION HTML
+// =====================================================
+
 function escapeHTML(value) {
 
-    return String(value)
+    return String(value || "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -279,5 +430,9 @@ function escapeHTML(value) {
         .replaceAll("'", "&#039;");
 }
 
+
+// =====================================================
+// DÉMARRAGE
+// =====================================================
 
 loadMembers();
